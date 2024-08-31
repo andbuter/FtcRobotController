@@ -1,6 +1,6 @@
-package org.firstinspires.ftc.teamcode.teleop;
+package org.firstinspires.ftc.teamcode.centerstage.teleop;
 
-import org.firstinspires.ftc.teamcode.LinearOpMode9808;
+import org.firstinspires.ftc.teamcode.centerstage.CenterstageLinearOpMode;
 import org.firstinspires.ftc.teamcode.HeadingHolder;
 
 
@@ -32,7 +32,7 @@ import org.firstinspires.ftc.teamcode.HeadingHolder;
 
 ============================================================================================
 */
-public abstract class Teleop extends LinearOpMode9808 {
+public abstract class Teleop extends CenterstageLinearOpMode {
     abstract protected boolean approachFarWall();
     abstract protected boolean approachBackWall();
     abstract protected double drone_launch_deg();

@@ -1,6 +1,6 @@
-package org.firstinspires.ftc.teamcode.auto.position;
+package org.firstinspires.ftc.teamcode.centerstage.auto.position;
 
-import org.firstinspires.ftc.teamcode.auto.Auto;
+import org.firstinspires.ftc.teamcode.centerstage.auto.Auto;
 
 public abstract class PositionBase {
     public abstract boolean allowParkOnly();
