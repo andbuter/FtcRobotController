@@ -62,7 +62,7 @@ public class VisionBase {
                 .setModelInputSize(300)
                 .setModelAspectRatio(16.0 / 9.0)
                 .build();
-         tfod.setMinResultConfidence(0.84f);       
+         tfod.setMinResultConfidence(0.87f);       
 
         // --------Camera Configuration-------------------------------------------------------------
         myVisionPortal = new VisionPortal.Builder()

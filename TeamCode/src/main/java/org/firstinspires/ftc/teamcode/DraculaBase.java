@@ -108,7 +108,7 @@ public class DraculaBase {
     public double tiltIncrement = .00005;
     public double tiltPosition=.0857;//.146
     public double tiltVertical=.0857;//.146
-    public double tiltToPick=.075;//.0085
+    public double tiltToPick=.080;//.0085
     public double tiltToCarry=.1897;//.25
     public double tiltToRelease=.2937;//.354
 
@@ -131,16 +131,21 @@ public class DraculaBase {
     int liftNewTargetPosition=0;
     public int liftUp=2200;
     int liftDown=0;
+    int liftIncrement=30;
+
+
 
     double armPower = 0.8;
     public int armIncrement=30;
     public int armLowered=0;
     int armJustAboveFirstLine=700;
-    int armJustAboveSecondLine=1058;
+    public int armJustAboveSecondLine=1358;
     int armJustAboveThirdLine=2100;
     public int armup=2200;
     public int armPickingPosition=150;
     int armNewTargetPosition=20;
+    int  lastArmPosition=0;
+    int  currentArmPosition=0;
 
 
     public double lineUpOnLeftColumnBlue=22;
@@ -495,18 +500,60 @@ public class DraculaBase {
     {
         //arm.setTargetPosition(armPickingPosition+500);// move the arm to a slightly raised position
         // while(arm.isBusy()){}
-       arm.setPower(armPower-.2);
+        arm.setPower(armPower-.2);
         tilt.setPosition(tiltToPick);
         ((LinearOpMode) callingOpMode).sleep(300);
         arm.setTargetPosition(armLowered);
-        while(arm.isBusy()){}
+        while(arm.isBusy()){
+
+        }
         grip.setPosition(gripOpened);
         ((LinearOpMode) callingOpMode).sleep(300);
         arm.setTargetPosition(armLowered+50);
         ((LinearOpMode) callingOpMode).sleep(300);
         tankDrive(.3,-3);
         arm.setTargetPosition(armLowered+100);
-        
+
+        tilt.setPosition(tiltToCarry);
+        ((LinearOpMode) callingOpMode).sleep(300);
+        arm.setTargetPosition(armLowered);
+        arm.setPower(armPower);
+    }
+
+    public void newpickUpPixel() {
+        int loops=0;
+        boolean stillMoving=true;
+        lastArmPosition=arm.getCurrentPosition();
+        //arm.setTargetPosition(armPickingPosition+500);// move the arm to a slightly raised position
+        // while(arm.isBusy()){}
+        arm.setPower(armPower-.2);
+        tilt.setPosition(tiltToPick);
+        ((LinearOpMode) callingOpMode).sleep(300);
+        arm.setTargetPosition(armLowered);
+        lastArmPosition = arm.getCurrentPosition();
+        loops = 0;
+        while(arm.isBusy() && stillMoving) {
+            ((LinearOpMode) callingOpMode).sleep(10);// pause to let the motor move
+            currentArmPosition = arm.getCurrentPosition();
+            // check for stall... if stalled set target position to current position
+            if (Math.abs(currentArmPosition - lastArmPosition) < 2) {
+                loops++;// count how many loops the arm has not moved
+            }
+            if (loops > 5) {
+                arm.setTargetPosition((arm.getCurrentPosition()));//force completion of the motion
+                loops = 0;
+                stillMoving=false;// end the "while" loop
+            }
+            lastArmPosition = currentArmPosition;
+        }
+
+        grip.setPosition(gripOpened);
+        ((LinearOpMode) callingOpMode).sleep(300);
+        arm.setTargetPosition(armLowered+50);
+        ((LinearOpMode) callingOpMode).sleep(300);
+        tankDrive(.3,-3);
+        arm.setTargetPosition(armLowered+100);
+
         tilt.setPosition(tiltToCarry);
         ((LinearOpMode) callingOpMode).sleep(300);
         arm.setTargetPosition(armLowered);
@@ -540,8 +587,8 @@ public class DraculaBase {
         gyroTurn(.5,90);
 
     }
-    
-   
+
+
 
     public void blueAutoDropPixelNoDriving()
     {
@@ -553,7 +600,7 @@ public class DraculaBase {
         gyroTurn(.5,90);
 
     }
-    
+
     public void blueAutoDropPixelNoDrivingHigh()
     {
         gyroTurn(.5,90);
@@ -564,7 +611,7 @@ public class DraculaBase {
         gyroTurn(.5,90);
 
     }
-    
+
     public void redAutoDropPixelNoDrivingHigh()
     {
         gyroTurn(.5,-90);
@@ -690,18 +737,25 @@ public class DraculaBase {
         tilt.setPosition(tiltToRelease);
     }
 
-    public void setLED( RevBlinkinLedDriver.BlinkinPattern pattern) {
+
+    public void setLED(RevBlinkinLedDriver.BlinkinPattern pattern) {
         blinkinLedDriver.setPattern(pattern);
     }
+
     public void setRedStrobeLED() {
-        setLED(RevBlinkinLedDriver.BlinkinPattern.STROBE_RED);
+        pattern = RevBlinkinLedDriver.BlinkinPattern.STROBE_RED;
+        blinkinLedDriver.setPattern(pattern);
+
     }
 
     public void setSolidGreenLED() {
-        setLED( RevBlinkinLedDriver.BlinkinPattern.GREEN );
+        pattern = RevBlinkinLedDriver.BlinkinPattern.GREEN;
+        blinkinLedDriver.setPattern(pattern);
+
     }
 
     public void setVioletLED() {
+
         pattern = RevBlinkinLedDriver.BlinkinPattern.VIOLET;
         blinkinLedDriver.setPattern(pattern);
 
@@ -1741,34 +1795,41 @@ public class DraculaBase {
     }
 
 
-    public void plowFromBlueBackdropStartToLeftSpike() {
+  // ------------------------- Blue Backdrop Pixel Plow ---------------------------------
+    public void plowFromBlueBackdropStartToLeftSpike() { // Left
         tankDrive(.5,2);
         gyroTurn(.5,25);
-        tankDrive(.5,19);
+        tankDrive(.5,17.45); 
         tankDrive(.5,-10);
         gyroTurn(.5,90);
     }
-    public void plowFromRedWingStartToLeftSpike() {
-        tankDrive(.5,2);
-        gyroTurn(.5,25);
-        tankDrive(.5,19);
-        tankDrive(.5,-10);
-        gyroTurn(.5,0);
-    }
-
-    public void plowFromBlueBackdropStartToCenterSpike() {
+    public void plowFromBlueBackdropStartToCenterSpike() { // Center
         tankDrive(.5,2);
         gyroTurn(.3,10);
         tankDrive(.3,10);
         gyroTurn(.3,0);
-        tankDrive(.5,14);
+        tankDrive(.5,14); 
         gyroTurn(.3,-5);
         tankDrive(.5,-12);
         gyroTurn(.5,90);
 
     }
+    public void plowFromBlueBackdropStartToRightSpike(){ // Right
+        tankDrive(.5,2);
+        gyroTurn(.3,10);
+        tankDrive(.5,10);
+        gyroTurn(.3,0);
+        tankDrive(.3,3);
+        gyroTurn(.3,-15);
+        tankDrive(.3,5);
+        gyroTurn(.3,-45);
+        tankDrive(.3,5);
 
-    public void plowFromRedWingStartToCenterSpike() {
+        tankDrive(.5,-10);
+        gyroTurn(.5,90);
+    }
+    // ---------------------------------- Red Wing Pixel Plow --------------------------------
+    public void plowFromRedWingStartToCenterSpike() { // Center
         tankDrive(.5,2);
         gyroTurn(.3,10);
         tankDrive(.3,25.5);
@@ -1779,8 +1840,14 @@ public class DraculaBase {
         gyroTurn(.5,90);
 
     }
-
-    public void plowFromBlueBackdropStartToRightSpike(){
+    public void plowFromRedWingStartToLeftSpike() { // Left
+        tankDrive(.5,2);
+        gyroTurn(.5,25);
+        tankDrive(.5,19);
+        tankDrive(.5,-10);
+        gyroTurn(.5,0);
+    }
+    public void plowFromRedWingStartToRightSpike(){ // Right
         tankDrive(.5,2);
         gyroTurn(.3,10);
         tankDrive(.5,10);
@@ -1795,35 +1862,20 @@ public class DraculaBase {
         gyroTurn(.5,90);
     }
 
-    public void plowFromRedWingStartToRightSpike(){
-        tankDrive(.5,2);
-        gyroTurn(.3,10);
-        tankDrive(.5,10);
-        gyroTurn(.3,0);
-        tankDrive(.3,3);
-        gyroTurn(.3,-15);
-        tankDrive(.3,5);
-        gyroTurn(.3,-45);
-        tankDrive(.3,5);
-
-        tankDrive(.5,-10);
-        gyroTurn(.5,90);
-    }
-
-
-    public void plowFromRedRightStartToRightSpike() {
+//------------------------------ Red Backdrop Pixel Plow ------------------------------------
+    public void plowFromRedRightStartToRightSpike() { // Right
         gyroTurn(.4,-16); // -3 angle 2/17/24
         tankDrive(.5,19.5); // +0.5 distance 2/17/24
         tankDrive(.3,-10);
         gyroTurn(.6,-90);
     }
 
-    public void plowFromRedRightStartToCenterSpike(){
+    public void plowFromRedRightStartToCenterSpike(){ // Center
         tankDrive(.5,25);
         tankDrive(.3,-10);
         gyroTurn(.6,-90);
     }
-    public void plowFromRedRightStartToLeftSpike(){
+    public void plowFromRedRightStartToLeftSpike(){ // Left
         tankDrive(.5,8);
         gyroTurn(.3,20);
         tankDrive(.3,8);
@@ -1832,30 +1884,27 @@ public class DraculaBase {
         tankDrive(.5,-15);
         gyroTurn(.5,-90);
     }
-    public void plowFromBlueRightStartToRightSpike() {
+    //------------------------- Blue Wing Pixel Plow -----------------------------
+    public void plowFromBlueRightStartToRightSpike() { // Right
         tankDrive(.5,1);
         gyroTurn(.4,-13);
         tankDrive(.5,19);
-        tankDrive(.3,-10);
+        tankDrive(.3,-18); // AJB changed from -10 on 2/24
 
     }
 
-    public void plowFromBlueRightStartToCenterSpike(){
-        tankDrive(.5,25);
+    public void plowFromBlueRightStartToCenterSpike(){ // Center
+        tankDrive(.3,26); // AJB changed from distance 25 on 2/24 and speed from .6 on 2/27
         tankDrive(.3,-10);
 
     }
-    public void plowFromBlueRightStartToLeftSpike(){
+    public void plowFromBlueRightStartToLeftSpike(){ // Left
         tankDrive(.5,8);
         gyroTurn(.3,20);
         tankDrive(.3,8);
         gyroTurn(.3,40);
-        tankDrive(.3,6);
+        tankDrive(.3,6.5);
         tankDrive(.5,-10);
 
     }
-
-
 }
-
-

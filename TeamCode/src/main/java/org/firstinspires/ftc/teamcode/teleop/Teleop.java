@@ -69,7 +69,7 @@ public abstract class Teleop extends LinearOpMode9808 {
 
     protected void init_9808() {
         if (gamepad1.a) {
-            diagnosticMode = true;
+            diagnosticMode = !diagnosticMode;
         }
 
         if (fieldCentric) {
@@ -86,7 +86,7 @@ public abstract class Teleop extends LinearOpMode9808 {
             driveBase.setSolidGoldLED();
         }
 
-        telemetry.addLine("Press A button to the enter diagnostic mode");
+        telemetry.addLine("Press A button to the toggle diagnostic mode");
         if (diagnosticMode) {
             telemetry.addLine("OpMode is in diagnostic mode; press PLAY.");
         }

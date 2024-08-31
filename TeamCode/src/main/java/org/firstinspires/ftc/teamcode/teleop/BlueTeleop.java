@@ -1,10 +1,12 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import org.firstinspires.ftc.teamcode.alliance.BlueBase;
 import org.firstinspires.ftc.teamcode.alliance.AllianceBase;
 
 @TeleOp(name = "BLUE TELEOP (new)", group = "TeleOp")
+@Disabled
 public class BlueTeleop extends Teleop {
     private final BlueBase colorBase = new BlueBase();
     protected AllianceBase getColorBase() { return colorBase; }

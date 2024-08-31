@@ -8,6 +8,12 @@ abstract public class BlueAuto extends Auto {
     private final BlueBase colorBase = new BlueBase();
     protected AllianceBase getColorBase() { return colorBase; }
     protected double distanceToCloseWall() { return driveBase.leftDistanceToWall(); }
+    protected double cameraOffset() { return driveBase.cameraOffset; }
+
+    protected String getParkString( Selection selection ) {
+        String[] selectionStrings = { "Left", "Right", "Invalid"};
+        return selectionStrings[ Math.min(selection.ordinal(), selectionStrings.length-1) ];
+    }
     protected int getAprilTagId( String propLocation ) {
         int tagId = 0;
         switch( propLocation) {

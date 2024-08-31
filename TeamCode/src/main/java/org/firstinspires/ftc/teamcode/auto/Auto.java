@@ -10,7 +10,8 @@ abstract public class Auto extends LinearOpMode9808 {
     public enum Selection {
         PARK_WALL,
         PARK_MID,
-        PARK_ONLY
+        PARK_ONLY,
+        PARK_BACKDROP
     }
 
     protected enum PropLoc {
@@ -30,7 +31,7 @@ abstract public class Auto extends LinearOpMode9808 {
             Double.NaN // LOC_INVALID
     };
 
-    protected double midParkDistFromWall = 54.0;
+    protected double midParkDistFromWall = 50.0;
 
     private VisionBase vision;
 
@@ -42,12 +43,15 @@ abstract public class Auto extends LinearOpMode9808 {
     abstract protected double distanceToCloseWall();
     abstract protected int getAprilTagId( String propLocation );
     abstract protected double allianceCorrectedDistance(double distance );
+
+    abstract protected String getParkString( Selection selection );
     abstract protected PropLoc getPropLoc( String propLocation );
+    abstract protected double cameraOffset();
 
     /*        PositionBase Wrappers                     */
     protected int getPixelDropHeight() { return getPositionBase().getPixelDropHeight(); }
     protected Selection getDefaultPark() { return getPositionBase().getDefaultPark(); }
-    protected boolean allowParkOnly() { return getPositionBase().allowParkOnly(); }
+    protected boolean allowWingOnly() { return getPositionBase().allowParkOnly(); }
 
     protected double getCurrentBackdropTagLocation() {
         return backdropTagLocations[getPropLoc( vision.propLocation ).ordinal()];
@@ -72,12 +76,12 @@ abstract public class Auto extends LinearOpMode9808 {
         driveBase.droneRelease.setPosition(driveBase.droneReleaseClosed);
 
         setLEDHeartbeat();
+
+        modeSelection = getDefaultPark();
     }
 
     protected void init_9808() {
         vision.locateOurPropStartingRightEdge();
-
-        modeSelection = getDefaultPark();
 
         // Get controller input for path selection
         getPathSelection();
@@ -87,7 +91,7 @@ abstract public class Auto extends LinearOpMode9808 {
                 driveBase.setSolidRedLED();
                 break;
             case "Center":
-                driveBase.setSolidGoldLED();
+                driveBase.setVioletLED();
                 break;
             default:
                 driveBase.setSolidGreenLED();
@@ -111,31 +115,61 @@ abstract public class Auto extends LinearOpMode9808 {
     }
 
     protected void getPathSelection() {
-        if (modeSelection == Selection.PARK_WALL) {
-            telemetry.addLine("Full Auto Park Wall");
-            telemetry.addLine("Press A to change to Full Auto Park Mid");
-            if(allowParkOnly()) {
+        telemetry.addLine("------------------------------------------");
+        if (modeSelection == Selection.PARK_WALL) { // parking towards the wall
+            telemetry.addLine("Full Auto Park " + getParkString(Selection.PARK_WALL));
+            telemetry.addLine();
+            telemetry.addLine("Press A to change to Full Auto Park " + getParkString(Selection.PARK_MID));
+            if(allowWingOnly()) {
                 telemetry.addLine("Press X to change to PARK ONLY");
+                telemetry.addLine("Press Y to change to Park Center");
             }
         }
-        if (modeSelection == Selection.PARK_MID) {
-            telemetry.addLine("Full Auto Park Mid");
-            telemetry.addLine("Press B to change to Full Auto Park Wall");
-            if(allowParkOnly()) {
+        if (modeSelection == Selection.PARK_MID) { // parking towards the middle
+            telemetry.addLine("Full Auto Park " + getParkString(Selection.PARK_MID));
+            telemetry.addLine();
+            telemetry.addLine("Press B to change to Full Auto Park " + getParkString(Selection.PARK_WALL));
+            if(allowWingOnly()) {
                 telemetry.addLine("Press X to change to PARK ONLY");
+                telemetry.addLine("Press Y to change to Park Center");
             }
         }
-        if (modeSelection == Selection.PARK_ONLY) {
+        if (modeSelection == Selection.PARK_ONLY) { // parking only
             telemetry.addLine("PARK ONLY");
-            telemetry.addLine("Press A to change to Full Auto Park Mid");
-            telemetry.addLine("Press B to change to Full Auto Park Wall");
+            telemetry.addLine();
+            telemetry.addLine("Press A to change to Full Auto Park " + getParkString(Selection.PARK_MID));
+            telemetry.addLine("Press B to change to Full Auto Park " + getParkString(Selection.PARK_WALL));
+            if(allowWingOnly()) {
+                telemetry.addLine("Press Y to change to Park Center");
+            }
         }
+        if (modeSelection == Selection.PARK_BACKDROP) { // parking center of backdrop
+            telemetry.addLine("Full Auto Park Center");
+            telemetry.addLine();
+            telemetry.addLine("Press A to change to Full Auto Park " + getParkString(Selection.PARK_MID));
+            telemetry.addLine("Press B to change to Full Auto Park " + getParkString(Selection.PARK_WALL));
+            if(allowWingOnly()) {
+                telemetry.addLine("Press X to change to PARK ONLY");
+            }
+        }
+
+        telemetry.addLine("------------------------------------------");
+
         if (gamepad1.a) {
             modeSelection = Selection.PARK_MID;
-        } else if (gamepad1.b) {
+        }
+        if (gamepad1.b) {
             modeSelection = Selection.PARK_WALL;
-        } else if (gamepad1.x && allowParkOnly()) {
-            modeSelection = Selection.PARK_ONLY;
+        }
+
+        /* Check Wing-only parking selections */
+        if(allowWingOnly()) {
+            if (gamepad1.x) {
+                modeSelection = Selection.PARK_ONLY;
+            }
+            if (gamepad1.y) {
+                modeSelection = Selection.PARK_BACKDROP;
+            }
         }
     }
 
@@ -150,7 +184,7 @@ abstract public class Auto extends LinearOpMode9808 {
         driveBase.gyroTurn(.6, getBackdropDeg());
         vision.getDistancesToAprilTag(getAprilTagId(vision.propLocation));
         sleep(50);
-        driveBase.tankDrive(.3, vision.forwardDistanceToTag - 9.75);
+        driveBase.tankDrive(.3, vision.forwardDistanceToTag - 9.5); // AJB Updated from 9.75 2/24
         driveBase.gyroTurn(.6, getBackdropDeg());
         driveBase.grip.setPosition(driveBase.gripClosed);
         sleep(1000);
@@ -175,9 +209,11 @@ abstract public class Auto extends LinearOpMode9808 {
         if (modeSelection == Selection.PARK_WALL) {
             distance = 4 - distanceToCloseWall();
         } else if (modeSelection == Selection.PARK_MID) {
-            distance = midParkDistFromWall - getCurrentBackdropTagLocation();
+            distance = (midParkDistFromWall+4) - getCurrentBackdropTagLocation();
         } else if (modeSelection == Selection.PARK_ONLY) {
             // This is handled by driveToBackdrop
+        } else if (modeSelection == Selection.PARK_BACKDROP) {
+            distance = (30-distanceToCloseWall());
         }
 
         if (distance != Double.NaN) {
@@ -186,14 +222,27 @@ abstract public class Auto extends LinearOpMode9808 {
     }
 
     protected void wrapUp() {
-        driveBase.tilt.setPosition(driveBase.tiltVertical);
+        if (modeSelection != Selection.PARK_ONLY) {
+            driveBase.tilt.setPosition(driveBase.tiltVertical);
+        }
         sleep(500);
-        setLEDHeartbeat();
         driveBase.gyroTurn(.6, getBackdropDeg());
-        driveBase.tankDrive(.3, 10);
+        if (modeSelection != Selection.PARK_BACKDROP) {
+            driveBase.tankDrive(.3, 10);
+        } else {
+            driveBase.tankDrive(.3,-1);
+        }
+        if (modeSelection == Selection.PARK_ONLY) {
+            driveBase.tankDrive(.3, 8);
+            driveBase.tilt.setPosition(driveBase.tiltToRelease);
+            driveBase.grip.setPosition(driveBase.gripClosed);
+            sleep(200);
+            driveBase.tilt.setPosition(driveBase.tiltVertical);
+        }
         driveBase.arm.setTargetPosition(5);
         driveBase.gyroTurn(.6, getBackdropDeg());
         HeadingHolder.setHeading(driveBase.robotFieldHeading());
+        setLEDHeartbeat();
         telemetry.addData("Path", "Complete");
 
         telemetry.update();
@@ -203,8 +252,8 @@ abstract public class Auto extends LinearOpMode9808 {
     protected void driveToBackdrop( String propLocation, boolean parkOnly ) {
         // Backdrop drive rules
         driveBase.gyroTurn(.6,getBackdropDeg());
-        driveBase.tankDrive(.5,15);
-        double distance = getCurrentBackdropTagLocation() - distanceToCloseWall();
+        driveBase.tankDrive(.5,10);
+        double distance = getCurrentBackdropTagLocation() - distanceToCloseWall() - cameraOffset();
         driveBase.DriveSidewaysCorrected(.5, allianceCorrectedDistance(distance), getBackdropDeg());
     }
 }

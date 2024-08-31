@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import org.firstinspires.ftc.teamcode.auto.position.BackdropBase;
 import org.firstinspires.ftc.teamcode.auto.position.PositionBase;
 
-@Autonomous(name = "Red Backdrop (new)", group = "Autonomous")
+@Autonomous(name = "Red Backdrop (State)", group = "Auto")
 public class Backdrop extends RedAuto {
     private final BackdropBase positionBase = new BackdropBase();
     protected PositionBase getPositionBase() { return positionBase; }
